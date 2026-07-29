@@ -73,3 +73,15 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+# Backend dependencies
+backend/node_modules/
+
+# Environment files
+.env
+backend/.env
+
+# Log files
+*.log
+
+# Optional IDE files
+.vscode/
