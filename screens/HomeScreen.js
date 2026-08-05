@@ -11,13 +11,15 @@ import {
   View,
 } from 'react-native';
 
+const DEFAULT_PROFILE_IMAGE = 'https://i.pravatar.cc/300?img=1';
+
 function HomeScreen({ navigation, isLoggedIn }) {
   const [myProfile, setMyProfile] = useState(null);
   const [suggestedProfiles, setSuggestedProfiles] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const sectionsData = [
     { id: '1', type: 'header' },
-    { id: '2', type: 'about' },
     { id: '5', type: 'suggestedProfiles' },
   ];
 
@@ -67,10 +69,12 @@ function HomeScreen({ navigation, isLoggedIn }) {
       console.log('API Response:', data);
 
       if (response.ok) {
-        const user = JSON.parse(await AsyncStorage.getItem('user'));
+        const storedUser = await AsyncStorage.getItem('user');
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        setCurrentUser(user);
 
         const filteredProfiles = data.profiles.filter(
-          profile => profile.user_id !== user.id,
+          profile => profile.user_id !== user?.id,
         );
 
         setSuggestedProfiles(filteredProfiles);
@@ -124,8 +128,15 @@ function HomeScreen({ navigation, isLoggedIn }) {
   };
 
   const handleMainProfileAction = () => {
-    navigation.navigate('Profile', {
-      profile: myProfile,
+    if (myProfile) {
+      navigation.navigate('Profile', {
+        profile: myProfile,
+      });
+      return;
+    }
+
+    navigation.navigate('CreateProfile', {
+      user: currentUser,
     });
   };
 
@@ -138,7 +149,10 @@ function HomeScreen({ navigation, isLoggedIn }) {
           style={styles.profileTopArea}
           onPress={() => handleProfilePress(item)}
         >
-          <Image source={{ uri: item.image }} style={styles.profileImage} />
+          <Image
+            source={{ uri: item.image || DEFAULT_PROFILE_IMAGE }}
+            style={styles.profileImage}
+          />
           <Text style={styles.profileName}>{item.name}</Text>
           <Text style={styles.profileRole}>{item.title}</Text>
         </TouchableOpacity>
@@ -159,40 +173,30 @@ function HomeScreen({ navigation, isLoggedIn }) {
     if (item.type === 'header') {
       return (
         <View style={styles.card}>
-          {myProfile?.image ? (
-            <Image source={{ uri: myProfile.image }} style={styles.mainImage} />
-          ) : null}
+          <Image
+            source={{ uri: myProfile?.image || DEFAULT_PROFILE_IMAGE }}
+            style={styles.mainImage}
+          />
 
-          <Text style={styles.name}>{myProfile?.name}</Text>
-          <Text style={styles.title}>{myProfile?.title}</Text>
-          <Text style={styles.designation}>{myProfile?.location}</Text>
+          <Text style={styles.name}>{myProfile?.name || 'No profile yet'}</Text>
+          <Text style={styles.title}>
+            {myProfile?.title || 'Create your profile to get started'}
+          </Text>
+          <Text style={styles.designation}>{myProfile?.location || ''}</Text>
+
+          <Text style={styles.aboutText}>
+            {myProfile?.about || 'Your profile details will appear here.'}
+          </Text>
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.profileActionButton}
               onPress={handleMainProfileAction}
             >
-              <Text style={styles.profileActionText}>View Profile</Text>
+              <Text style={styles.profileActionText}>
+                {myProfile ? 'View Profile' : 'Create Profile'}
+              </Text>
             </TouchableOpacity>
-          </View>
-        </View>
-      );
-    } else if (item.type === 'about') {
-      return (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
-          <Text style={styles.sectionContent}>
-            {myProfile?.about || 'No about information available.'}
-          </Text>
-
-          <View style={styles.skillsContainer}>
-            {(myProfile?.skills || ['React Native', 'JavaScript', 'AI/ML']).map(
-              skill => (
-                <View key={skill} style={styles.skillTag}>
-                  <Text style={styles.skillText}>{skill}</Text>
-                </View>
-              ),
-            )}
           </View>
         </View>
       );
@@ -278,7 +282,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#555555',
     marginTop: 6,
-    marginBottom: 22,
+    marginBottom: 12,
+  },
+  aboutText: {
+    color: '#555555',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 18,
+    textAlign: 'center',
   },
   buttonContainer: {
     flexDirection: 'row',

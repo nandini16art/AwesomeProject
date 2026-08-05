@@ -16,7 +16,7 @@ function EditProfileScreen({ route, navigation }) {
   const [location, setLocation] = useState(profile.location || '');
   const [about, setAbout] = useState(profile.about || '');
   const [education, setEducation] = useState(profile.education || '');
-  const [image] = useState(profile.image || '');
+  const [image, setImage] = useState(profile.image || '');
 
   const handleUpdate = async () => {
     try {
@@ -40,8 +40,25 @@ function EditProfileScreen({ route, navigation }) {
       const data = await response.json();
 
       if (response.ok) {
+        const profileResponse = await fetch(
+          'http://10.0.2.2:5000/api/profiles/me',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+        const profileData = await profileResponse.json();
+
         Alert.alert('Success', 'Profile Updated Successfully');
-        navigation.navigate('Home');
+
+        if (profileResponse.ok) {
+          navigation.replace('Profile', {
+            profile: profileData.profile,
+          });
+        } else {
+          navigation.navigate('Home');
+        }
       } else {
         Alert.alert('Error', data.message);
       }
@@ -64,6 +81,10 @@ function EditProfileScreen({ route, navigation }) {
       <Text style={styles.label}>Title</Text>
 
       <TextInput value={title} onChangeText={setTitle} style={styles.input} />
+
+      <Text style={styles.label}>Image URL</Text>
+
+      <TextInput value={image} onChangeText={setImage} style={styles.input} />
 
       <Text style={styles.label}>Location</Text>
 
@@ -118,6 +139,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 15,
+  },
+
+  disabledInput: {
+    backgroundColor: '#ddd',
+  },
+
+  aboutInput: {
+    height: 100,
   },
 
   button: {

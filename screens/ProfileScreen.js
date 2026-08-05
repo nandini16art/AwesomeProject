@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
+  Alert,
   FlatList,
   Image,
   StyleSheet,
@@ -9,11 +10,14 @@ import {
   View,
 } from 'react-native';
 
-function ProfileScreen({ navigation, route, isFollowing, onToggleFollow }) {
+function ProfileScreen({ navigation, route }) {
   const { profile } = route.params;
 
-  console.log(profile);
   const [loggedInUser, setLoggedInUser] = useState(null);
+  const [profileIsFollowing, setProfileIsFollowing] = useState(
+    Boolean(profile.isFollowing),
+  );
+  const skills = profile.skills || ['React Native', 'JavaScript', 'AI/ML'];
 
   useEffect(() => {
     const loadUser = async () => {
@@ -30,8 +34,30 @@ function ProfileScreen({ navigation, route, isFollowing, onToggleFollow }) {
 
   const followingCount = profile.following;
 
-  const handleFollow = () => {
-    onToggleFollow(profile.id);
+  const handleFollow = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+
+      const response = await fetch(
+        `http://10.0.2.2:5000/api/follow/${profile.user_id}`,
+        {
+          method: profileIsFollowing ? 'DELETE' : 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        setProfileIsFollowing(!profileIsFollowing);
+      } else {
+        Alert.alert('Error', data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      Alert.alert('Error', 'Something went wrong');
+    }
   };
 
   const sectionsData = [
@@ -43,7 +69,9 @@ function ProfileScreen({ navigation, route, isFollowing, onToggleFollow }) {
     { id: '6', type: 'experience' },
   ];
 
-  const isMyProfile = loggedInUser?.id === profile.user_id;
+  const isMyProfile =
+    String(loggedInUser?.id) === String(profile.user_id) ||
+    loggedInUser?.email === profile.email;
 
   const renderSection = ({ item }) => {
     if (item.type === 'header') {
@@ -69,7 +97,7 @@ function ProfileScreen({ navigation, route, isFollowing, onToggleFollow }) {
                   onPress={handleFollow}
                 >
                   <Text style={styles.followButtonText}>
-                    {isFollowing ? 'Following' : 'Follow'}
+                    {profileIsFollowing ? 'Following' : 'Follow'}
                   </Text>
                 </TouchableOpacity>
 
@@ -110,7 +138,7 @@ function ProfileScreen({ navigation, route, isFollowing, onToggleFollow }) {
           <Text style={styles.sectionTitle}>Skills</Text>
 
           <View style={styles.skillsContainer}>
-            {profile.skills.map((skill, index) => (
+            {skills.map((skill, index) => (
               <View key={index} style={styles.skillTag}>
                 <Text style={styles.skillText}>{skill}</Text>
               </View>

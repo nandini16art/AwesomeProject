@@ -122,6 +122,7 @@ const getMyProfile = (req, res) => {
   const sql = `
   SELECT
   p.id,
+    p.user_id,
     u.name,
     u.email,
     u.role,

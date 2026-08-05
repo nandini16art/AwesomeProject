@@ -163,19 +163,14 @@ function App() {
 
           <Stack.Screen
             name="Profile"
-            options={({ route }) => ({ title: route.params.profile.name })}
+            options={({ route }) => ({
+              title: route.params.profile?.name || 'Profile',
+            })}
           >
             {props => {
               const profile = props.route.params.profile;
 
-              return (
-                <ProfileScreen
-                  {...props}
-                  profile={profile}
-                  isFollowing={followedProfileIds.includes(profile.id)}
-                  onToggleFollow={handleFollow}
-                />
-              );
+              return <ProfileScreen {...props} profile={profile} />;
             }}
           </Stack.Screen>
 

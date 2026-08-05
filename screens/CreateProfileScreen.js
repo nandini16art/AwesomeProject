@@ -82,7 +82,7 @@ function CreateProfileScreen({ navigation, route, setIsLoggedIn }) {
         },
         body: JSON.stringify({
           name: name,
-          role: role,
+          title: role,
           image: image,
           location: location,
           followersCount: 0,
@@ -98,9 +98,7 @@ function CreateProfileScreen({ navigation, route, setIsLoggedIn }) {
         setIsLoggedIn?.(true);
         Alert.alert('Success', data.message);
 
-        navigation.replace('Profile', {
-          profile: data.profile,
-        });
+        navigation.replace('Home');
       } else {
         Alert.alert('Error', data.message || 'Profile creation failed');
       }

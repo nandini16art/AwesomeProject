@@ -1,5 +1,14 @@
 const db = require('../db');
 
+const rollbackAndRespond = (res, message) => {
+  db.rollback(() => {
+    res.status(500).json({
+      success: false,
+      message,
+    });
+  });
+};
+
 const followUser = (req, res) => {
   const followerId = req.user.id;
   const followingId = parseInt(req.params.userId, 10);
@@ -11,94 +20,135 @@ const followUser = (req, res) => {
     });
   }
 
-  // Check if already following
-  db.query(
-    'SELECT * FROM followers WHERE follower_id = ? AND following_id = ?',
-    [followerId, followingId],
-    (err, result) => {
-      if (err) {
-        return res.status(500).json({
-          success: false,
-          message: 'Database Error',
-        });
-      }
-
-      if (result.length > 0) {
-        return res.status(409).json({
-          success: false,
-          message: 'Already following this user',
-        });
-      }
-
-      db.query(
-        'INSERT INTO followers (follower_id, following_id) VALUES (?, ?)',
-        [followerId, followingId],
-        insertErr => {
-          if (insertErr) {
-            return res.status(500).json({
-              success: false,
-              message: 'Unable to follow user',
-            });
-          }
-
-          // Increase follower count
-          db.query(
-            'UPDATE profiles SET followers = followers + 1 WHERE user_id = ?',
-            [followingId],
-          );
-
-          // Increase following count
-          db.query(
-            'UPDATE profiles SET following = following + 1 WHERE user_id = ?',
-            [followerId],
-          );
-
-          res.json({
-            success: true,
-            message: 'User followed successfully',
-          });
-        },
-      );
-    },
-  );
-};
-
-const unfollowUser = (req, res) => {
-  const followerId = req.user.id;
-  const followingId = Number(req.params.userId);
-
-  const sql =
-    'DELETE FROM followers WHERE follower_id = ? AND following_id = ?';
-
-  db.query(sql, [followerId, followingId], (err, result) => {
-    if (err) {
+  db.beginTransaction(transactionErr => {
+    if (transactionErr) {
       return res.status(500).json({
         success: false,
         message: 'Database Error',
       });
     }
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
+    db.query(
+      'INSERT INTO followers (follower_id, following_id) VALUES (?, ?)',
+      [followerId, followingId],
+      insertErr => {
+        if (insertErr) {
+          const statusCode = insertErr.code === 'ER_DUP_ENTRY' ? 409 : 500;
+          const message =
+            insertErr.code === 'ER_DUP_ENTRY'
+              ? 'Already following this user'
+              : 'Unable to follow user';
+
+          return db.rollback(() => {
+            res.status(statusCode).json({
+              success: false,
+              message,
+            });
+          });
+        }
+
+        db.query(
+          'UPDATE profiles SET followers = followers + 1 WHERE user_id = ?',
+          [followingId],
+          (followersErr, followersResult) => {
+            if (followersErr || followersResult.affectedRows === 0) {
+              return rollbackAndRespond(res, 'Unable to update follower count');
+            }
+
+            db.query(
+              'UPDATE profiles SET following = following + 1 WHERE user_id = ?',
+              [followerId],
+              (followingErr, followingResult) => {
+                if (followingErr || followingResult.affectedRows === 0) {
+                  return rollbackAndRespond(
+                    res,
+                    'Unable to update following count',
+                  );
+                }
+
+                db.commit(commitErr => {
+                  if (commitErr) {
+                    return rollbackAndRespond(res, 'Unable to follow user');
+                  }
+
+                  res.json({
+                    success: true,
+                    message: 'User followed successfully',
+                  });
+                });
+              },
+            );
+          },
+        );
+      },
+    );
+  });
+};
+
+const unfollowUser = (req, res) => {
+  const followerId = req.user.id;
+  const followingId = parseInt(req.params.userId, 10);
+
+  db.beginTransaction(transactionErr => {
+    if (transactionErr) {
+      return res.status(500).json({
         success: false,
-        message: 'You are not following this user',
+        message: 'Database Error',
       });
     }
 
     db.query(
-      'UPDATE profiles SET followers = followers - 1 WHERE user_id = ?',
-      [followingId],
-    );
+      'DELETE FROM followers WHERE follower_id = ? AND following_id = ?',
+      [followerId, followingId],
+      (deleteErr, deleteResult) => {
+        if (deleteErr) {
+          return rollbackAndRespond(res, 'Unable to unfollow user');
+        }
 
-    db.query(
-      'UPDATE profiles SET following = following - 1 WHERE user_id = ?',
-      [followerId],
-    );
+        if (deleteResult.affectedRows === 0) {
+          return db.rollback(() => {
+            res.status(404).json({
+              success: false,
+              message: 'You are not following this user',
+            });
+          });
+        }
 
-    res.json({
-      success: true,
-      message: 'User unfollowed successfully',
-    });
+        db.query(
+          'UPDATE profiles SET followers = GREATEST(followers - 1, 0) WHERE user_id = ?',
+          [followingId],
+          (followersErr, followersResult) => {
+            if (followersErr || followersResult.affectedRows === 0) {
+              return rollbackAndRespond(res, 'Unable to update follower count');
+            }
+
+            db.query(
+              'UPDATE profiles SET following = GREATEST(following - 1, 0) WHERE user_id = ?',
+              [followerId],
+              (followingErr, followingResult) => {
+                if (followingErr || followingResult.affectedRows === 0) {
+                  return rollbackAndRespond(
+                    res,
+                    'Unable to update following count',
+                  );
+                }
+
+                db.commit(commitErr => {
+                  if (commitErr) {
+                    return rollbackAndRespond(res, 'Unable to unfollow user');
+                  }
+
+                  res.json({
+                    success: true,
+                    message: 'User unfollowed successfully',
+                  });
+                });
+              },
+            );
+          },
+        );
+      },
+    );
   });
 };
 

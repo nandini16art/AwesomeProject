@@ -17,11 +17,18 @@ function AdminDashboardScreen({ navigation, setIsLoggedIn }) {
   const loadDashboard = async () => {
     try {
       const storedUser = await AsyncStorage.getItem('user');
+      const token = await AsyncStorage.getItem('token');
       setAdminUser(storedUser ? JSON.parse(storedUser) : null);
 
-      const response = await fetch('http://10.0.2.2:5000/api/profiles');
+      const response = await fetch('http://10.0.2.2:5000/api/profiles', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const data = await response.json();
-      setProfiles(Array.isArray(data) ? data : []);
+      setProfiles(
+        response.ok && Array.isArray(data.profiles) ? data.profiles : [],
+      );
     } catch (error) {
       console.log('Admin dashboard error:', error);
       Alert.alert('Error', 'Could not load dashboard data');
