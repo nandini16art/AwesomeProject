@@ -6,40 +6,133 @@ import {
   FlatList,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 
 function AdminDashboardScreen({ navigation, setIsLoggedIn }) {
-  const [profiles, setProfiles] = useState([]);
+  const [users, setUsers] = useState([]);
   const [adminUser, setAdminUser] = useState(null);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
-  const loadDashboard = async () => {
+  const getAuthHeaders = useCallback(async () => {
+    const token = await AsyncStorage.getItem('token');
+
+    return {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + token,
+    };
+  }, []);
+
+  const loadDashboard = useCallback(async () => {
     try {
       const storedUser = await AsyncStorage.getItem('user');
-      const token = await AsyncStorage.getItem('token');
       setAdminUser(storedUser ? JSON.parse(storedUser) : null);
 
-      const response = await fetch('http://10.0.2.2:5000/api/profiles', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await fetch('http://10.0.2.2:5000/api/users', {
+        headers: await getAuthHeaders(),
       });
       const data = await response.json();
-      setProfiles(
-        response.ok && Array.isArray(data.profiles) ? data.profiles : [],
-      );
+
+      if (response.ok) {
+        setUsers(Array.isArray(data.users) ? data.users : []);
+      } else {
+        Alert.alert('Error', data.message || 'Could not load users');
+      }
     } catch (error) {
       console.log('Admin dashboard error:', error);
       Alert.alert('Error', 'Could not load dashboard data');
     }
-  };
+  }, [getAuthHeaders]);
 
   useFocusEffect(
     useCallback(() => {
       loadDashboard();
-    }, []),
+    }, [loadDashboard]),
   );
+
+  const handleCreateUser = async () => {
+    try {
+      if (!name.trim() || !email.trim() || !password) {
+        Alert.alert(
+          'Missing Details',
+          'Name, email, and password are required.',
+        );
+        return;
+      }
+
+      setIsSaving(true);
+
+      const response = await fetch('http://10.0.2.2:5000/api/users', {
+        method: 'POST',
+        headers: await getAuthHeaders(),
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          password,
+        }),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        setName('');
+        setEmail('');
+        setPassword('');
+        Alert.alert('Success', data.message);
+        loadDashboard();
+      } else {
+        Alert.alert('Error', data.message || 'Could not create user');
+      }
+    } catch (error) {
+      console.log('Create user error:', error);
+      Alert.alert('Error', 'Could not create user');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const deleteUser = async user => {
+    try {
+      const response = await fetch(
+        'http://10.0.2.2:5000/api/users/' + user.id,
+        {
+          method: 'DELETE',
+          headers: await getAuthHeaders(),
+        },
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        setUsers(currentUsers =>
+          currentUsers.filter(currentUser => currentUser.id !== user.id),
+        );
+        Alert.alert('Success', data.message);
+      } else {
+        Alert.alert('Error', data.message || 'Could not delete user');
+      }
+    } catch (error) {
+      console.log('Delete user error:', error);
+      Alert.alert('Error', 'Could not delete user');
+    }
+  };
+
+  const handleDeleteUser = user => {
+    Alert.alert('Delete User', 'Delete ' + user.name + '?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => deleteUser(user),
+      },
+    ]);
+  };
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem('token');
@@ -48,44 +141,101 @@ function AdminDashboardScreen({ navigation, setIsLoggedIn }) {
     navigation.replace('Login');
   };
 
-  const renderProfile = ({ item }) => (
-    <View style={styles.profileRow}>
-      <View style={styles.profileTextBlock}>
-        <Text style={styles.profileName}>{item.name}</Text>
-        <Text style={styles.profileMeta}>{item.email}</Text>
-        <Text style={styles.profileMeta}>{item.role}</Text>
+  const renderUser = ({ item }) => {
+    const canDelete = item.role !== 'admin' && item.id !== adminUser?.id;
+
+    return (
+      <View style={styles.userRow}>
+        <View style={styles.userTextBlock}>
+          <Text style={styles.userName}>{item.name}</Text>
+          <Text style={styles.userMeta}>{item.email}</Text>
+          <Text style={styles.userMeta}>
+            {item.role} {item.title ? '- ' + item.title : ''}
+          </Text>
+        </View>
+
+        {canDelete ? (
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => handleDeleteUser(item)}
+          >
+            <Text style={styles.deleteText}>Delete</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
-      <Text style={styles.profileLocation}>{item.location}</Text>
-    </View>
-  );
+    );
+  };
 
   return (
     <FlatList
-      data={profiles}
-      renderItem={renderProfile}
-      keyExtractor={item => item.id}
+      data={users}
+      renderItem={renderUser}
+      keyExtractor={item => String(item.id)}
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       ListHeaderComponent={
-        <View style={styles.header}>
-          <Text style={styles.title}>Admin Dashboard</Text>
-          <Text style={styles.subtitle}>{adminUser?.email}</Text>
+        <View>
+          <View style={styles.header}>
+            <Text style={styles.title}>Admin Dashboard</Text>
+            <Text style={styles.subtitle}>{adminUser?.email}</Text>
 
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statNumber}>{profiles.length}</Text>
-              <Text style={styles.statLabel}>Profiles</Text>
+            <View style={styles.statsRow}>
+              <View style={styles.statBox}>
+                <Text style={styles.statNumber}>{users.length}</Text>
+                <Text style={styles.statLabel}>Users</Text>
+              </View>
             </View>
+
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Text style={styles.logoutText}>Logout</Text>
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
+          <View style={styles.createPanel}>
+            <Text style={styles.sectionTitle}>Create User</Text>
+
+            <TextInput
+              placeholder="Name"
+              value={name}
+              onChangeText={setName}
+              style={styles.input}
+            />
+
+            <TextInput
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              style={styles.input}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+
+            <TextInput
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              style={styles.input}
+              secureTextEntry
+            />
+
+            <TouchableOpacity
+              style={styles.createButton}
+              onPress={handleCreateUser}
+              disabled={isSaving}
+            >
+              <Text style={styles.createText}>
+                {isSaving ? 'Creating...' : 'Create User'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.sectionTitle}>Existing Users</Text>
         </View>
       }
-      ListEmptyComponent={
-        <Text style={styles.emptyText}>No profiles found.</Text>
-      }
+      ListEmptyComponent={<Text style={styles.emptyText}>No users found.</Text>}
     />
   );
 }
@@ -147,7 +297,39 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
-  profileRow: {
+  createPanel: {
+    backgroundColor: '#e8e4e4',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 18,
+  },
+  sectionTitle: {
+    color: '#111111',
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 12,
+  },
+  input: {
+    backgroundColor: '#ffffff',
+    borderColor: '#cccccc',
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  createButton: {
+    alignItems: 'center',
+    backgroundColor: '#7f7ab8',
+    borderRadius: 20,
+    paddingVertical: 10,
+  },
+  createText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  userRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -156,23 +338,29 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 10,
   },
-  profileTextBlock: {
+  userTextBlock: {
     flex: 1,
     paddingRight: 12,
   },
-  profileName: {
+  userName: {
     fontSize: 16,
     fontWeight: '800',
     color: '#111111',
   },
-  profileMeta: {
+  userMeta: {
     fontSize: 13,
     color: '#555555',
     marginTop: 3,
   },
-  profileLocation: {
-    fontSize: 12,
-    color: '#7f7ab8',
+  deleteButton: {
+    backgroundColor: '#ff6268',
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  deleteText: {
+    color: '#ffffff',
+    fontSize: 13,
     fontWeight: '700',
   },
   emptyText: {

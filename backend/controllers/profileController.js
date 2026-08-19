@@ -237,10 +237,86 @@ const deleteProfile = (req, res) => {
   });
 };
 
+const uploadProfilePhoto = (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: 'No image uploaded',
+    });
+  }
+
+  const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${
+    req.file.filename
+  }`;
+
+  const sql = `
+    UPDATE profiles
+    SET image = ?
+    WHERE user_id = ?
+  `;
+
+  db.query(sql, [imageUrl, req.user.id], (err, result) => {
+    if (err) {
+      console.log(err);
+
+      return res.status(500).json({
+        success: false,
+        message: 'Database Error',
+      });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Profile not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile photo updated successfully',
+      image: imageUrl,
+    });
+  });
+};
+
+const deleteProfilePhoto = (req, res) => {
+  const sql = `
+    UPDATE profiles
+    SET image = NULL
+    WHERE user_id = ?
+  `;
+
+  db.query(sql, [req.user.id], (err, result) => {
+    if (err) {
+      console.log(err);
+
+      return res.status(500).json({
+        success: false,
+        message: 'Database Error',
+      });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Profile not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile photo deleted successfully',
+    });
+  });
+};
+
 module.exports = {
   getProfiles,
   createProfile,
   getMyProfile,
   updateProfile,
   deleteProfile,
+  uploadProfilePhoto,
+  deleteProfilePhoto,
 };

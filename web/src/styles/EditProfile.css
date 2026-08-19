@@ -1,0 +1,173 @@
+.edit-profile-page {
+  min-height: 100vh;
+  background-color: #e7dcdc;
+  padding: 20px;
+}
+
+.edit-profile-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.edit-profile-back {
+  margin-bottom: 15px;
+
+  background-color: #ffffff;
+  color: #7f7ab8;
+
+  border: 1px solid #7f7ab8;
+  border-radius: 20px;
+
+  padding: 8px 16px;
+
+  cursor: pointer;
+}
+
+.edit-profile-title {
+  font-size: 26px;
+  font-weight: bold;
+  text-align: center;
+
+  color: #111111;
+
+  margin: 0 0 20px;
+}
+
+.edit-profile-form {
+  width: 100%;
+}
+
+.edit-profile-group {
+  margin-bottom: 15px;
+}
+
+.edit-profile-label {
+  display: block;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  color: #111111;
+
+  margin-bottom: 5px;
+}
+
+.edit-profile-input {
+  width: 100%;
+
+  padding: 12px;
+
+  background-color: #ffffff;
+
+  border: 1px solid #999999;
+  border-radius: 10px;
+
+  font-size: 15px;
+  color: #111111;
+}
+
+.edit-profile-input:focus {
+  outline: none;
+  border-color: #7f7ab8;
+}
+
+.edit-profile-input:disabled {
+  background-color: #eeeeee;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+.edit-profile-textarea {
+  width: 100%;
+  min-height: 120px;
+
+  padding: 12px;
+
+  background-color: #ffffff;
+
+  border: 1px solid #999999;
+  border-radius: 10px;
+
+  font-size: 15px;
+  color: #111111;
+
+  resize: vertical;
+}
+
+.edit-profile-textarea:focus {
+  outline: none;
+  border-color: #7f7ab8;
+}
+
+.edit-profile-preview {
+  display: block;
+  width: 112px;
+  height: 112px;
+  object-fit: cover;
+  border-radius: 56px;
+  margin: 0 auto 14px;
+}
+
+.edit-profile-file {
+  display: none;
+}
+
+.edit-profile-photo-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.edit-profile-photo-button,
+.edit-profile-delete-photo {
+  width: 100%;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.edit-profile-photo-button {
+  background-color: #7f7ab8;
+  color: #ffffff;
+  border: none;
+}
+
+.edit-profile-delete-photo {
+  background-color: #ffffff;
+  color: #ff6268;
+  border: 1px solid #ff6268;
+}
+
+.edit-profile-button {
+  width: 100%;
+
+  background-color: #7f7ab8;
+  color: #ffffff;
+
+  border: none;
+  border-radius: 10px;
+
+  padding: 15px;
+
+  font-size: 18px;
+  font-weight: bold;
+
+  cursor: pointer;
+}
+
+.edit-profile-button:hover {
+  opacity: 0.9;
+}
+
+.edit-profile-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.edit-profile-message {
+  text-align: center;
+  margin-top: 15px;
+  color: #555555;
+}

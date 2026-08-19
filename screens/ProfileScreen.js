@@ -10,6 +10,8 @@ import {
   View,
 } from 'react-native';
 
+const DEFAULT_PROFILE_IMAGE = 'https://i.pravatar.cc/300?img=1';
+
 function ProfileScreen({ navigation, route }) {
   const { profile } = route.params;
 
@@ -77,7 +79,10 @@ function ProfileScreen({ navigation, route }) {
     if (item.type === 'header') {
       return (
         <View style={styles.profileHeader}>
-          <Image source={{ uri: profile.image }} style={styles.profileImage} />
+          <Image
+            source={{ uri: profile.image || DEFAULT_PROFILE_IMAGE }}
+            style={styles.profileImage}
+          />
           <Text style={styles.profileName}>{profile.name}</Text>
           <Text style={styles.profileRole}>{profile.title}</Text>
           <Text style={styles.profileLocation}>{profile.location}</Text>
