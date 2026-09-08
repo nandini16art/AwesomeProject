@@ -83,7 +83,7 @@ function EditProfile() {
       if (response.data.success) {
         alert('Profile Updated Successfully');
 
-        // Get the updated profile
+        
         const profileResponse = await api.get('/profiles/me');
 
         if (profileResponse.data.success) {
@@ -111,7 +111,7 @@ function EditProfile() {
         <h1 className="edit-profile-title">Edit Profile</h1>
 
         <form className="edit-profile-form" onSubmit={handleUpdate}>
-          {/* Name */}
+          
 
           <div className="edit-profile-group">
             <label className="edit-profile-label">Name</label>
@@ -124,7 +124,7 @@ function EditProfile() {
             />
           </div>
 
-          {/* Title */}
+      
 
           <div className="edit-profile-group">
             <label className="edit-profile-label">Title</label>
@@ -138,7 +138,7 @@ function EditProfile() {
             />
           </div>
 
-          {/* Profile Picture */}
+         
 
           <div className="edit-profile-group">
             <label className="edit-profile-label">Profile Picture</label>
@@ -195,7 +195,7 @@ function EditProfile() {
             </div>
           </div>
 
-          {/* Location */}
+          
 
           <div className="edit-profile-group">
             <label className="edit-profile-label">Location</label>
@@ -209,7 +209,7 @@ function EditProfile() {
             />
           </div>
 
-          {/* About */}
+          
 
           <div className="edit-profile-group">
             <label className="edit-profile-label">About</label>
@@ -222,7 +222,7 @@ function EditProfile() {
             />
           </div>
 
-          {/* Education */}
+         
 
           <div className="edit-profile-group">
             <label className="edit-profile-label">Education</label>

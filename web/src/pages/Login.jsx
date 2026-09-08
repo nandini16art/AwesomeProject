@@ -47,7 +47,7 @@ function Login({ onLogin }) {
           Login
         </h1>
 
-        {/* Admin / User selection */}
+        
 
         <div className="role-switcher">
 
@@ -78,7 +78,7 @@ function Login({ onLogin }) {
           onSubmit={handleLogin}
         >
 
-          {/* Email */}
+          
 
           <div className="form-group">
 
@@ -99,7 +99,7 @@ function Login({ onLogin }) {
 
           </div>
 
-          {/* Password */}
+        
 
           <div className="form-group">
 
@@ -120,7 +120,7 @@ function Login({ onLogin }) {
 
           </div>
 
-          {/* Login */}
+          
 
           <button
             className="login-button"

@@ -73,7 +73,7 @@ function AdminDashboard({ onLogout }) {
         setEmail("");
         setPassword("");
 
-        // Reload users
+      
         await loadUsers();
       }
     } catch (error) {
@@ -130,7 +130,7 @@ function AdminDashboard({ onLogout }) {
   return (
     <div className="admin-page">
 
-      {/* Header */}
+      
 
       <div className="admin-header">
 
@@ -144,7 +144,7 @@ function AdminDashboard({ onLogout }) {
 
       </div>
 
-      {/* Statistics */}
+      
 
       <div className="admin-stats">
 
@@ -158,7 +158,7 @@ function AdminDashboard({ onLogout }) {
 
       </div>
 
-      {/* Create User */}
+      
 
       <div className="admin-create-section">
 
@@ -242,7 +242,7 @@ function AdminDashboard({ onLogout }) {
 
       </div>
 
-      {/* Existing Users */}
+     
 
       <div className="admin-users-section">
 
@@ -289,7 +289,7 @@ function AdminDashboard({ onLogout }) {
 
       </div>
 
-      {/* Logout */}
+      
 
       <div className="admin-logout-container">
 

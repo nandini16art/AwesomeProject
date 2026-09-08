@@ -21,31 +21,31 @@ function LoginScreen({ navigation, route, setIsLoggedIn, setUserRole }) {
   };
 
   const handleLogin = async () => {
-  try {
-    console.log("===== LOGIN REQUEST =====");
-    console.log("Email:", email);
-    console.log("Password:", password);
-    console.log("Role:", loginRole);
+    try {
+      console.log('===== LOGIN REQUEST =====');
+      console.log('Email:', email);
+      console.log('Password:', password);
+      console.log('Role:', loginRole);
 
-    const response = await fetch('http://10.0.2.2:5000/api/auth/login', {
+      const response = await fetch('http://10.0.2.2:5000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           email: email.trim(),
-          password: password,
+          password: password.trim(),
           role: loginRole,
         }),
       });
 
       const data = await response.json();
-      console.log("Status:", response.status);
-      console.log("Response:", data);
+      console.log('Status:', response.status);
+      console.log('Response:', data);
       console.log(data);
 
       if (response.ok && data.success) {
-        Alert.alert("User Data", JSON.stringify(data.user));
+        Alert.alert('User Data', JSON.stringify(data.user));
         await AsyncStorage.setItem('token', data.token);
         await AsyncStorage.setItem('user', JSON.stringify(data.user));
 

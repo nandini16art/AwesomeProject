@@ -67,7 +67,7 @@ function Profile() {
   return (
     <div className="profile-page">
 
-      {/* Back button */}
+      
 
       <div className="profile-topbar">
         <button
@@ -78,7 +78,7 @@ function Profile() {
         </button>
       </div>
 
-      {/* Profile Header */}
+      
 
       <div className="profile-header-card">
 
@@ -103,7 +103,7 @@ function Profile() {
           {profile.location}
         </p>
 
-        {/* Stats */}
+      
 
         <div className="profile-stats">
 
@@ -133,7 +133,7 @@ function Profile() {
 
         </div>
 
-        {/* Actions */}
+    
 
         <div className="profile-actions">
 
@@ -169,7 +169,7 @@ function Profile() {
 
       </div>
 
-      {/* About */}
+     
 
       <div className="profile-section">
 
@@ -184,7 +184,7 @@ function Profile() {
 
       </div>
 
-      {/* Skills */}
+      
 
       <div className="profile-section">
 
@@ -211,7 +211,7 @@ function Profile() {
 
       </div>
 
-      {/* Education */}
+      
 
       <div className="profile-section">
 
@@ -234,7 +234,7 @@ function Profile() {
 
       </div>
 
-      {/* Experience */}
+     
 
       <div className="profile-section">
 
